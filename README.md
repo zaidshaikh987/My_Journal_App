@@ -1,109 +1,82 @@
 # Journal Calendar
 
+A personal diary and journaling web application built with Django that helps you keep track of your daily thoughts, experiences, and memories.
 
-## Table Of Contents
+## Features
 
-- [Journal Calendar](#journal)
-  - [Table Of Contents](#table-of-contents)
-  - [Description](#description)
-  - [Demo](#demo)
-  - [Distinctiveness and Complexity](#distinctiveness-and-complexity)
-  - [Preview and Features](#preview-and-features)
-  - [Files and Directories](#files-and-directories)
-  - [Running the Application](#running-the-application)
-  - [Languages & Tools](#languages--tools)
-  - [Contact](#contact)
+- 📅 Calendar view of your journal entries
+- ✍️ Rich text editor for journal entries
+- 🔖 Tag and categorize your entries
+- 🔒 User authentication and private entries
+- 📱 Responsive design works on all devices
 
+## Installation
 
-## Description
-**Journal** is a web application with a productivity focus that aids users in creating and organizing their journal entries. It gives individuals a platform to keep a journal of their ideas and experiences, which boosts their productivity and promotes personal development.
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/zaidshaikh987/My_Journal_App.git
+   cd My_Journal_App
+   ```
 
-This web application was developed  as a [final project](https://cs50.harvard.edu/web/2020/projects/final/capstone/) for [CS50's Web Programming course](https://cs50.harvard.edu/web/2020/) using Django Web Framework, JavaScript, and Bootstrap.
+2. **Set up a virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Demo
-https://journalcalendar.up.railway.app
+4. **Set up the database**:
+   ```bash
+   python manage.py migrate
+   ```
 
+5. **Create a superuser** (admin):
+   ```bash
+   python manage.py createsuperuser
+   ```
 
-## Distinctiveness and Complexity
+6. **Run the development server**:
+   ```bash
+   python manage.py runserver
+   ```
 
-Because of the following components, my final product passes the distinctiveness and complexity requirements:
+7. **Access the application**:
+   ```
+   http://127.0.0.1:8000/
+   ```
 
+## Usage
 
-1. As a productivity tool, this project is primarily focused on "Productivity". Users are given a dedicated platform to organize and chronicle their everyday experiences, thoughts, and ideas, which boosts productivity and well-being.
-2. To encourage users to continue journaling without missing a day, the Journal App has a dynamic, interactive activity board that functions like a calendar. Users can easily browse through dates on the board and examine their journal entries for particular days.
-3. Instead of using a simple text field for the content of submissions, this project uses a rich text editor that allows users to format their entries using features like bold and italic text. This improves the writing process and lets individuals express themselves better when journaling.
-4. A feature of the Journal App determines and shows the user's longest run of continuous journaling days. This feature was created from the ground up to encourage users to keep up a regular journaling routine.
-5. Users of the app can filter their diary entries by month and year using a feature in the app. This enables people to reflect on their prior experiences and generate new insights.
-6. Journal App uses the activity board's animations to enhance the user experience and make it more visually appealing.
+1. Register a new account or log in
+2. Create your first journal entry
+3. View your entries in calendar or list view
+4. Edit or delete entries as needed
 
+## Technologies Used
 
-## Preview and Features
-  - **Register Page**
-    - Username, email, and password areas on the website all include validations.
-    - The web browser's "strong password suggestion" is supported in the password field.
-    - A new `User` instance is created in the database as soon as valid data is submitted.
-  
-    <br>
+- Backend: Django 4.2
+- Frontend: HTML5, CSS3, JavaScript, Bootstrap 5
+- Database: SQLite (default, can be configured for PostgreSQL)
 
-  - **Login Page**
-    - Logs users in and redirects them to the index page
+## Contributing
 
-    <br>
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-  - **Index Page: Activity board and day's view**
-    - The page features a dynamic and user-friendly activity board.
-    - It sends an HTTP request to the `/entry_on/$date` route every time a user clicks on a different date on the board, retrieves the entry for that day as a response, and displays it at the bottom of the page.
-    - A menu button with options for altering and deleting the entry may be found in the bottom-right corner of the entry.
-  
-    <br>
+## License
 
-  - **Index Page: Creating a new entry**
-    - For better formatting, the TinyMCE text editor is used. _(including bold and italic text)_
-    - Allows users to add related tags to their entries.
-  
-    <br>
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-  - **All Entries Page**
-    - The page has a date filter.
-    - The number of entries displayed on a single page is limited by pagination.
-    - Allows users to view, edit, and delete any of their entries.
-  
-    <br>
+## Models
 
-  - **Profile Page**
-    - To motivate users, the page displays the "longest journaling streak" statistic.
-    - Users can change their password via this page.
-  
-    <br>
+- `models.py`: Defines the database models.
 
-## Files and Directories
+## Views
 
-File structure:
-
-- `final_project`: Root directory.
-    - `journal`: Application's main directory.
-      - `static/journal`: Holds the static files
-        - `css`
-            - `styles.css`: Styling file; adds more responsiveness to the app.
-        - `icons`: Contains icons for the app.
-        - `js` 
-          - `alerts.js`: Decides if an alert should disappear automatically.
-          - `board.js`: Draws a calendar-like, current month's activity board on the index page.
-          - `getEntries.js`: Contains the functions that retrieve journal entries from the backend and display them.
-          - `monthYearFilter.js`: Creates filter elements and displays them on a page where all entries are listed.
-          - `script.js`: Looks for click events, and acts accordingly.
-          - `theme.js`: Sets theme according to user's choice.
-      - `templates/journal`: Contains the HTML templates for rendering the web pages.
-      - `admin.py`: Defines which models will be displayed in the Django Admin Panel.
-      - `apps.py`
-      - `forms.py`: Contains Django forms used for creating and updating entries and tags.
-      - `models.py`: Defines the database models.
-      - `test.py`
-      - `urls.py`: Specifies the URL patterns and their corresponding views.
-      - `utils.py`: Contains helper function used in the app.
-      - `views.py`: Contains the view functions that handle different HTTP requests.
-    - `main`: Project's main directory.
+- `views.py`: Contains the view functions that handle different HTTP requests.
       - `asgi.py`
       - `settings.py`: project's and text editor's configuration file.
       - `urls.py`: Specifies the URL patterns and their corresponding views for the project.
