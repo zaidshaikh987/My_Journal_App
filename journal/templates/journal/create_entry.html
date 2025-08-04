@@ -1,25 +1,33 @@
 {% extends 'journal/layout.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Edit Entry{% else %}New Entry{% endif %}{% endblock %}
 
 {% block body %}
-  <div class="container d-grid col-12 col-lg-6 mt-2 mx-auto text-center">
-    <h2 class="display-4">New Entry</h2>
-    <form action="" method="post">
-      {% csrf_token %}
-      <div class="form-floating mb-3">{{ form.date }}
-        {{ form.date.label_tag }}</div>
-      <div class="form-floating mb-3">
-        {{ form.content }}
-      </div>
-      <div class="form-floating mb-3">{{ form.tags }}
-        {{ form.tags.label_tag }}</div>
-
-      <div class="d-grid gap-2 col-12 mx-auto mb-3">
-        <input class="btn btn-primary rounded-2" type="submit" value="Save" />
-      </div>
-    </form>
-  </div>
+    {% include 'journal/_entry_form.html' with is_update=is_update %}
 {% endblock %}
 
 {% block script %}
-  {{ form.media }}
+{{ form.media }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const titleField = document.getElementById('{{ form.title.id_for_label }}');
+        if (titleField) {
+            titleField.focus();
+        }
+        
+        // Add Bootstrap classes to form fields
+        const formFields = document.querySelectorAll('input[type="text"], textarea, select');
+        formFields.forEach(field => {
+            field.classList.add('form-control');
+        });
+        
+        // Initialize tag input with suggestions
+        const tagInput = document.getElementById('{{ form.tags.id_for_label }}');
+        if (tagInput) {
+            // This is where you could initialize a tag input library if desired
+            // For example, using Choices.js or similar
+        }
+    });
+</script>
 {% endblock %}

@@ -1,48 +1,187 @@
 {% extends 'journal/layout.html' %}
 {% load static %}
 
+{% block title %}Journal Calendar - Home{% endblock %}
+
 {% block body %}
-<div class="container" id="indexView">
-    <input type="hidden" name="csrfToken" value="{{ csrf_token }}" style="display: none;" id="csrfToken">
-    <div id="boardDiv">
-        <div class="d-flex align-items-center justify-content-between mx-auto" id="boardLabelDiv">
-            <button class="btn border-0 fs-3" id="prevMonthBtn"><</button>
-            <h1 class="display-6 m-0" id="boardLabel"></h1>
-            <button class="btn border-0 fs-3" id="nextMonthBtn">></button>
+<div class="container mt-4" id="indexView">
+    <div class="row">
+        <!-- Calendar Section -->
+        <div class="col-12 col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0 calendar-nav-title">
+                        <span class="calendar-nav-month">{{ current_month_name }}</span> 
+                        <span class="calendar-nav-year">{{ current_year }}</span>
+                    </h2>
+                    <div class="calendar-nav-buttons">
+                        <a href="{% url 'index' %}?year={{ prev_year }}&month={{ prev_month }}" 
+                           class="btn btn-outline-secondary btn-sm prev-month" 
+                           title="Previous month"
+                           data-bs-toggle="tooltip">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                        <a href="{% url 'index' %}" 
+                           class="btn btn-outline-secondary btn-sm today-btn"
+                           data-bs-toggle="tooltip"
+                           title="Go to current month">
+                            Today
+                        </a>
+                        <a href="{% url 'index' %}?year={{ next_year }}&month={{ next_month }}" 
+                           class="btn btn-outline-secondary btn-sm next-month" 
+                           title="Next month"
+                           data-bs-toggle="tooltip">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered mb-0 calendar-table">
+                        <thead>
+                            <tr>
+                                {% for day in day_names %}
+                                <th class="text-center">{{ day }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week in weeks %}
+                            <tr>
+                                {% for day in week %}
+                                {% if day.day %}
+                                <td class="text-center align-middle {% if day.is_today %}today{% endif %} {% if not day.in_current_month %}other-month{% endif %} {% if day.entry %}has-entry{% endif %}"
+                                    style="height: 80px;"
+                                    data-entry-url="{% url 'entry_on' day.day|date:'Y-m-d' %}"
+                                    data-date="{{ day.day|date:'Y-m-d' }}">
+                                    <div class="d-flex flex-column h-100">
+                                        <div class="calendar-day-number">{{ day.day|date:'j' }}</div>
+                                        {% if day.entry %}
+                                        <div class="mt-auto">
+                                            <span class="badge bg-success rounded-pill" data-bs-toggle="tooltip" title="View entry for {{ day.day|date:'F j, Y' }}">
+                                                <i class="bi bi-journal-text"></i>
+                                            </span>
+                                        </div>
+                                        {% else %}
+                                        <div class="mt-auto">
+                                            <a href="{% url 'create_entry' day.day|date:'Y-m-d' %}" 
+                                               class="btn btn-sm btn-outline-primary btn-sm" 
+                                               data-bs-toggle="tooltip" 
+                                               title="Create new entry for {{ day.day|date:'F j, Y' }}">
+                                                <i class="bi bi-plus"></i>
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td></td>
+                                {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <table class="mx-auto mb-3 p-1 rounded-4 shadow-sm" id="activityBoard">
-            <thead class="d-flex align-items-center justify-content-center mb-2" id="boardHead">
-                <tr class="d-flex align-items-center justify-content-center gap-2">
-                    <td>M</td>
-                    <td>T</td>
-                    <td>W</td>
-                    <td>T</td>
-                    <td>F</td>
-                    <td class="text-danger">S</td>
-                    <td class="text-danger">S</td>
-                </tr>
-            </thead>
-        </table>
-
+        
+        <!-- Today's Entry Section -->
+        <div class="col-12 col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Today's Entry</h2>
+                    {% if today_entry %}
+                    <div>
+                        <a href="{% url 'update_entry' today_entry.id %}" 
+                           class="btn btn-sm btn-outline-primary"
+                           title="Edit today's entry">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form action="{% url 'delete_entry' today_entry.id %}" 
+                              method="post" 
+                              class="d-inline"
+                              onsubmit="return confirm('Are you sure you want to delete this entry? This cannot be undone.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                    title="Delete today's entry">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if today_entry %}
+                    <h3 class="h5">{{ today_entry.title|default:"Untitled" }}</h3>
+                    <div class="entry-content mb-3">
+                        {{ today_entry.content|safe|truncatewords_html:50 }}
+                        {% if today_entry.content|wordcount > 50 %}
+                        <a href="{% url 'entry_on' today_entry.date|date:'Y-m-d' %}" class="text-decoration-none">
+                            Read more...
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% if today_entry.tags.all %}
+                    <div class="mb-3">
+                        {% for tag in today_entry.tags.all %}
+                        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="text-muted small">
+                        Last updated: {{ today_entry.updated_at|timesince }} ago
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-journal-text display-4 text-muted mb-3"></i>
+                        <p class="text-muted mb-4">No entry for today. Start writing your thoughts!</p>
+                        <a href="{% url 'create_entry' today|date:'Y-m-d' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> Create Today's Entry
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light">
+                    <h2 class="h4 mb-0">Your Stats</h2>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Current Streak:</span>
+                        <strong>{{ user.userprofile.current_streak }} day{{ user.userprofile.current_streak|pluralize }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Longest Streak:</span>
+                        <strong>{{ user.userprofile.longest_streak }} day{{ user.userprofile.longest_streak|pluralize }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>This Month:</span>
+                        <strong>{{ entries_this_month }} entr{{ entries_this_month|pluralize:"y,ies" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Total Entries:</span>
+                        <strong>{{ total_entries }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <hr class="border border-secondary-subtle border-4 opacity-50">
-    
-    <div id="daysView">
-        <h2 class="display-4 text-center text-danger-emphasis" id="daysHeading"></h2>
-        <div class="border d-flex align-items-center mb-3 rounded-4 shadow-sm p-2" id="daysEntry">
-            <!-- js -->
-        </div>
-        <div class="d-grid col-12 gap-2 mb-3 mx-auto" id="newEntryBtnDiv">
-            <!-- js -->
-        </div>
-    </div>
-
 </div>
 {% endblock %}
 
 {% block script %}
-<script src="{% static 'journal/js/getEntries.js' %}"></script>
-<script src="{% static 'journal/js/board.js' %}"></script>
-<script src="{% static 'journal/js/script.js' %}"></script>
+<script>
+    // Add any custom JavaScript for the index page here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle calendar cell clicks
+        document.querySelectorAll('td[data-entry-url]').forEach(cell => {
+            cell.addEventListener('click', function() {
+                window.location.href = this.getAttribute('data-entry-url');
+            });
+        });
+    });
+</script>
 {% endblock %}

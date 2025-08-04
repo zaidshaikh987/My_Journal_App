@@ -1,223 +1,272 @@
-{% extends 'journal/layout.html' %} {% load static %} {% block body %}
-<div class="container mt-2">
-    <h2 class="display-4">Entries</h2>
-    <form
-        action="{% url 'all_entries' %}"
-        class="d-flex gap-2 mb-3"
-        method="get"
-        id="filter-form"
-    >
-        <!-- js -->
-    </form>
-    {% if not page_entries|length > 0 %}
-    <p class="lead alert alert-info">No journal entries to show.</p>
-    {% else %} {% for entry in page_entries %}
-    <div
-        class="border row d-flex mb-2 mx-auto py-2 rounded-2 shadow-sm eachEntryDiv"
-        id="entry-{{ entry.id }}"
-        data-date="{{ entry.date|date:'Y-m-d' }}"
-    >
-        <!-- Modal -->
-        <div
-            class="modal fade"
-            id="detailModal-{{ entry.id }}"
-            tabindex="-1"
-            aria-labelledby="detailModalLabel"
-            aria-hidden="true"
-        >
-            <div
-                class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
-            >
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1
-                            class="modal-title fs-5"
-                            id="detailModal-{{ entry.id }}Label"
-                        >
-                            {{ entry.date }}
-                        </h1>
-                        <button
-                            type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"
-                        ></button>
-                    </div>
-                    <div class="modal-body text-break">
-                        <div>{{ entry.content|safe }}</div>
-                        {% if entry.tags.all|length > 0 %}
-                        <div class="text-info mt-3">
-                            {% for tag in entry.tags.all %}
-                            <span class="badge rounded-pill text-bg-secondary"
-                                >{{ tag }}</span
-                            >
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="modal-footer">
-                        <form action="{% url 'entry' entry.id %}" method="post">
-                            {% csrf_token %}
-                            <input
-                                class="btn btn-outline-danger px-3"
-                                type="submit"
-                                value="Delete"
-                            />
-                        </form>
-                        <button
-                            type="button"
-                            class="btn btn-outline-primary px-4"
-                        >
-                            <a
-                                class="nav-link"
-                                href="{% url 'update_entry' entry.date %}"
-                                >Edit</a
-                            >
+{% extends 'journal/layout.html' %}
+{% load static %}
+{% load url_helpers %}
+
+{% block title %}All Entries - Journal Calendar{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">All Journal Entries</h1>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-calendar-week"></i> Back to Calendar
+        </a>
+    </div>
+    
+    <!-- Filter Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h2 class="h5 mb-0">Filter Entries</h2>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3" id="filter-form">
+                <div class="col-md-4">
+                    <label for="month" class="form-label">Month</label>
+                    <select name="month" id="month" class="form-select">
+                        <option value="">All Months</option>
+                        {% for num, name in months %}
+                            <option value="{{ num }}" {% if num|stringformat:'s' == request.GET.month %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="year" class="form-label">Year</label>
+                    <select name="year" id="year" class="form-select">
+                        <option value="">All Years</option>
+                        {% for y in years %}
+                            <option value="{{ y }}" {% if y|stringformat:'s' == request.GET.year %}selected{% endif %}>
+                                {{ y }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="tag" class="form-label">Tag</label>
+                    <select name="tag" id="tag" class="form-select">
+                        <option value="">All Tags</option>
+                        {% for tag in all_tags %}
+                            <option value="{{ tag.id }}" {% if tag.id|stringformat:'s' == request.GET.tag %}selected{% endif %}>
+                                {{ tag.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel"></i> Apply Filters
                         </button>
+                        <a href="{% url 'all_entries' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Clear Filters
+                        </a>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div
-            class="col-2 border-end d-flex flex-column justify-content-center align-items-center"
-        >
-            <span>{{ entry.date|date:'M' }}</span>
-            <span class="fs-1">{{ entry.date|date:'d' }}</span>
-            <span>{{ entry.date|date:'Y' }}</span>
-        </div>
-        <div class="col-8 d-flex flex-column justify-content-between">
-            <div class="text-break text-truncate line-clamp line-clamp-3">
-                {{ entry.content|safe }}
-            </div>
-
-            {% if entry.tags.all|length > 0 %}
-            <div class="small text-info-emphasis">
-                {{ entry.tags.all|join:', ' }}
-            </div>
-            {% endif %}
-        </div>
-        <div class="col-2 d-flex align-items-center justify-content-center">
-            <!-- Button trigger modal -->
-            <button
-                type="button"
-                class="btn p-2 rounded-5"
-                data-bs-toggle="modal"
-                data-bs-target="#detailModal-{{ entry.id }}"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="36"
-                    height="36"
-                    fill="currentColor"
-                    class="bi bi-book text-secondary"
-                    viewBox="0 0 16 16"
-                >
-                    <path
-                        d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z"
-                    />
-                </svg>
-            </button>
+            </form>
         </div>
     </div>
-    {% endfor %} {% endif %}
-</div>
-<!-- PAGINATION -->
-{% if page_entries.paginator.num_pages > 1 %}
-<nav class="my-3" aria-label="Page navigation">
-    <ul class="pagination justify-content-center">
-        {% if page_entries.has_previous %}
-        <li class="page-item">
-            <a
-                class="page-link"
-                href="?page={{ page_entries.previous_page_number }}"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    class="bi bi-arrow-left-circle"
-                    viewBox="0 0 16 16"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"
-                    />
-                </svg>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item">
-            <a class="page-link disabled" href="?page=1">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    class="bi bi-arrow-left-circle"
-                    viewBox="0 0 16 16"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-4.5-.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"
-                    />
-                </svg>
-            </a>
-        </li>
-        {% endif %}
-        <li
-            class="page-item border d-flex align-items-center justify-content-center px-5"
-        >
-            <small
-                >{{ page_entries.number }} /
-                {{page_entries.paginator.num_pages}}
-            </small>
-        </li>
-        {% if page_entries.has_next %}
-        <li class="page-item">
-            <a
-                class="page-link"
-                href="?page={{ page_entries.next_page_number }}"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    class="bi bi-arrow-right-circle"
-                    viewBox="0 0 16 16"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"
-                    />
-                </svg>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item">
-            <a
-                class="page-link disabled"
-                href="?page={{ page_entries.paginator.num_pages }}"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    fill="currentColor"
-                    class="bi bi-arrow-right-circle"
-                    viewBox="0 0 16 16"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M1 8a7 7 0 1 0 14 0A7 7 0 0 0 1 8zm15 0A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"
-                    />
-                </svg>
-            </a>
-        </li>
-        {% endif %} 
-    </ul>
-</nav>
-{% endif %} {% block script %}
+    <!-- Entries List -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">
+                {% if filter_applied %}
+                    Filtered Entries ({{ page_entries.paginator.count }} found)
+                {% else %}
+                    All Entries ({{ page_entries.paginator.count }} total)
+                {% endif %}
+            </h2>
+            <div class="small text-muted">
+                Page {{ page_entries.number }} of {{ page_entries.paginator.num_pages }}
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if not page_entries %}
+                <div class="text-center p-5">
+                    <i class="bi bi-journal-text display-4 text-muted mb-3"></i>
+                    <p class="lead text-muted">No journal entries found.</p>
+                    {% if filter_applied %}
+                        <p class="text-muted">Try adjusting your filters or <a href="{% url 'all_entries' %}">clear all filters</a>.</p>
+                    {% else %}
+                        <a href="{% url 'create_entry' today|date:'Y-m-d' %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-lg"></i> Create Your First Entry
+                        </a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="list-group list-group-flush">
+                    {% for entry in page_entries %}
+                    <div class="list-group-item p-0">
+                        <div class="d-flex align-items-stretch">
+                            <!-- Date Badge -->
+                            <div class="d-flex flex-column align-items-center justify-content-center p-3 bg-light" style="min-width: 100px;">
+                                <div class="text-uppercase text-muted small">{{ entry.date|date:'M' }}</div>
+                                <div class="display-6 fw-bold">{{ entry.date|date:'d' }}</div>
+                                <div class="text-muted">{{ entry.date|date:'Y' }}</div>
+                                <div class="small text-muted mt-1">{{ entry.date|date:'D' }}</div>
+                            </div>
+                            
+                            <!-- Entry Content -->
+                            <div class="flex-grow-1 p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-1">
+                                        {{ entry.title|default:"Untitled Entry" }}
+                                    </h5>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'update_entry' entry.id %}" 
+                                           class="btn btn-outline-primary"
+                                           title="Edit entry">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn btn-outline-danger"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteModal{{ entry.id }}"
+                                                title="Delete entry">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Entry Preview -->
+                                <div class="entry-preview text-muted mb-2">
+                                    {{ entry.content|striptags|truncatewords:30 }}
+                                </div>
+                                
+                                <!-- Tags -->
+                                {% if entry.tags.all %}
+                                <div class="mt-2">
+                                    {% for tag in entry.tags.all %}
+                                    <span class="badge bg-light text-dark border me-1 mb-1">
+                                        <i class="bi bi-tag-fill me-1"></i>{{ tag.name }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Entry Actions -->
+                                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                    <small class="text-muted">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Last updated {{ entry.updated_at|timesince }} ago
+                                    </small>
+                                    <a href="{% url 'entry_on' entry.date|date:'Y-m-d' %}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        Read more <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Confirmation Modal -->
+                        <div class="modal fade" id="deleteModal{{ entry.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete this entry from {{ entry.date|date:"F j, Y" }}?</p>
+                                        <p class="text-danger">This action cannot be undone.</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <form action="{% url 'delete_entry' entry.id %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-trash me-1"></i> Delete Entry
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Pagination -->
+    {% if page_entries.paginator.num_pages > 1 %}
+    <nav aria-label="Journal entries pagination" class="mb-4">
+        <ul class="pagination justify-content-center flex-wrap">
+            <!-- First Page -->
+            {% if page_entries.number > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% url_replace page=1 %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;&laquo;</span>
+                </li>
+            {% endif %}
+            
+            <!-- Previous Page -->
+            {% if page_entries.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% url_replace page=page_entries.previous_page_number %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+            {% endif %}
+            
+            <!-- Page Numbers -->
+            {% for i in page_entries.paginator.page_range %}
+                {% if i >= page_entries.number|add:-3 and i <= page_entries.number|add:3 %}
+                    {% if page_entries.number == i %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% url_replace page=i %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            
+            <!-- Next Page -->
+            {% if page_entries.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% url_replace page=page_entries.next_page_number %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+            {% endif %}
+            
+            <!-- Last Page -->
+            {% if page_entries.number < page_entries.paginator.num_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% url_replace page=page_entries.paginator.num_pages %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;&raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+        <div class="text-center text-muted small">
+            Showing {{ page_entries.start_index }} to {{ page_entries.end_index }} of {{ page_entries.paginator.count }} entries
+        </div>
+    </nav>
+    {% endif %}
+
+{% block extra_js %}
 <script src="{% static 'journal/js/monthYearFilter.js' %}"></script>
-{% endblock %} {% endblock %}
+{% endblock %}
+
+{% endblock %}

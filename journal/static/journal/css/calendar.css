@@ -1,0 +1,121 @@
+/* Calendar Styles */
+.calendar-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 2px;
+}
+
+.calendar-table th {
+    text-align: center;
+    padding: 10px 5px;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    border: none;
+}
+
+.calendar-table td {
+    height: 100px;
+    vertical-align: top;
+    padding: 5px;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.calendar-table td:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+.calendar-table td.today-highlight {
+    background-color: #e7f5ff;
+    border: 2px solid #0d6efd;
+}
+
+.calendar-table td.other-month {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    opacity: 0.6;
+}
+
+.calendar-table td.has-entry {
+    background-color: #e8f5e9;
+    border-left: 3px solid #28a745;
+}
+
+.calendar-table td.has-entry:hover {
+    background-color: #d4edda;
+}
+
+.calendar-day-number {
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+}
+
+.calendar-entry-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #28a745;
+}
+
+/* Calendar Navigation */
+.calendar-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.calendar-nav-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+.calendar-nav-buttons .btn {
+    margin-left: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .calendar-table td {
+        height: 70px;
+        font-size: 0.8rem;
+    }
+    
+    .calendar-day-number {
+        font-size: 0.8rem;
+    }
+    
+    .calendar-nav-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Animation for calendar cells */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-table td {
+    animation: fadeIn 0.3s ease-out;
+    animation-fill-mode: both;
+}
+
+/* Add delay for each cell */
+.calendar-table tr:nth-child(1) td { animation-delay: 0.05s; }
+.calendar-table tr:nth-child(2) td { animation-delay: 0.1s; }
+.calendar-table tr:nth-child(3) td { animation-delay: 0.15s; }
+.calendar-table tr:nth-child(4) td { animation-delay: 0.2s; }
+.calendar-table tr:nth-child(5) td { animation-delay: 0.25s; }
+.calendar-table tr:nth-child(6) td { animation-delay: 0.3s; }

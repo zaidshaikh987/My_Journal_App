@@ -1,38 +1,73 @@
 from django import forms
-from .models import JournalEntry
+from .models import JournalEntry, Tag
 from django.contrib.auth.forms import PasswordChangeForm
 from tinymce.widgets import TinyMCE
+from django.utils.translation import gettext_lazy as _
 
 
 class EntryForm(forms.ModelForm):
-
-    # remove colon ":" suffix from labels
+    # Remove colon ":" suffix from labels
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""
-
-    # Fix: M2M field "tags" yields error
-    # override ManyToMany with CharField
-    tags = forms.CharField(required=False, widget=forms.TextInput(attrs={
-        "class": "form-control shadow-lg",
-        "placeholder": "Tags",
-    }))
+        # Set initial tags if editing an existing entry
+        if self.instance and self.instance.pk:
+            self.fields['tags'].initial = ', '.join(tag.name for tag in self.instance.tags.all())
+    
+    # Title field with custom widget
+    title = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': _('Entry title (optional)')
+        })
+    )
+    
+    # Tags field as comma-separated string
+    tags = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': _('comma, separated, tags'),
+            'data-role': 'tagsinput'  # For potential JS tag input library
+        }),
+        help_text=_('Separate tags with commas')
+    )
+    
+    # Content field with TinyMCE
+    content = forms.CharField(
+        widget=TinyMCE(
+            attrs={
+                'class': 'form-control',
+                'rows': 15,
+                'placeholder': _('Write your thoughts here...')
+            },
+            mce_attrs={
+                'menubar': False,
+                'plugins': 'link lists code help',
+                'toolbar': 'undo redo | formatselect | bold italic backcolor | \
+                           alignleft aligncenter alignright alignjustify | \
+                           bullist numlist outdent indent | removeformat | help',
+                'content_style': 'body { font-family: Arial, sans-serif; font-size: 16px; }',
+                'branding': False,
+                'elementpath': False,
+                'statusbar': False,
+            }
+        )
+    )
+    
+    # Date field
+    date = forms.DateField(
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date',
+        })
+    )
 
     class Meta:
         model = JournalEntry
-        fields = ["date", "content", "tags"]
-        widgets = {
-            "content": TinyMCE(attrs={
-                "class": "form-control shadow-lg",
-                "cols": 30,
-                "rows": 10
-            }),
-            "date": forms.DateInput(attrs={
-                "class": "form-control shadow-lg",
-                "placeholder": "Date",
-                "type": "date"
-            })
-        }
+        fields = ['title', 'date', 'content', 'tags']
 
     # this will automatically run when form.is_valid() called
     def clean_tags(self):

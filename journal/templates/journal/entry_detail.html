@@ -1,0 +1,153 @@
+{% extends 'journal/layout.html' %}
+{% load static %}
+
+{% block title %}{{ entry.title|default:"Untitled Entry" }} - Journal Calendar{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            {{ entry.title|default:"Untitled Entry" }}
+                        </h4>
+                        <div class="btn-group">
+                            <a href="{% url 'update_entry' entry.id %}" class="btn btn-sm btn-light" title="Edit entry">
+                                <i class="bi bi-pencil"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="small mt-1">
+                        <i class="bi bi-calendar-event me-1"></i>
+                        {{ entry.date|date:"F j, Y" }}
+                        <span class="mx-2">•</span>
+                        <i class="bi bi-clock me-1"></i>
+                        Last updated {{ entry.updated_at|timesince }} ago
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="entry-content">
+                        {{ entry.content|safe }}
+                    </div>
+                    
+                    {% if entry.tags.all %}
+                    <div class="mt-4 pt-3 border-top">
+                        <h6>Tags:</h6>
+                        <div>
+                            {% for tag in entry.tags.all %}
+                                <span class="badge bg-light text-dark border me-1 mb-1">
+                                    <i class="bi bi-tag-fill me-1"></i>{{ tag.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between">
+                        {% if prev_date %}
+                            <a href="{% url 'entry_on' prev_date|date:'Y-m-d' %}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-left me-1"></i> Previous Entry
+                            </a>
+                        {% else %}
+                            <span></span>
+                        {% endif %}
+                        
+                        <a href="{% url 'all_entries' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-journal-text me-1"></i> All Entries
+                        </a>
+                        
+                        {% if next_date %}
+                            <a href="{% url 'entry_on' next_date|date:'Y-m-d' %}" class="btn btn-outline-primary">
+                                Next Entry <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        {% else %}
+                            <span></span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this entry from {{ entry.date|date:"F j, Y" }}?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'delete_entry' entry.id %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i> Delete Entry
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .entry-content {
+        line-height: 1.8;
+        font-size: 1.05rem;
+    }
+    .entry-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.25rem;
+        margin: 1rem 0;
+    }
+    .entry-content h1, 
+    .entry-content h2, 
+    .entry-content h3, 
+    .entry-content h4, 
+    .entry-content h5, 
+    .entry-content h6 {
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .entry-content p {
+        margin-bottom: 1.2rem;
+    }
+    .entry-content ul, 
+    .entry-content ol {
+        margin-bottom: 1.2rem;
+        padding-left: 1.5rem;
+    }
+    .entry-content blockquote {
+        border-left: 4px solid #dee2e6;
+        padding-left: 1rem;
+        margin: 1.5rem 0;
+        color: #6c757d;
+    }
+    .entry-content pre {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        overflow-x: auto;
+    }
+    .entry-content code {
+        background-color: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.2rem;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}

@@ -1,39 +1,254 @@
 {% extends 'journal/layout.html' %}
+{% load static %}
+
+{% block title %}My Profile - Journal Calendar{% endblock %}
 
 {% block body %}
-
-<div class="container d-grid col-12 col-lg-6 mt-2 mx-auto">
-    <h2 class="display-4">Profile</h2>
-    <div class="border rounded-3 pt-3 px-2 my-3">
-        <table class="table table-striped table-hover" id="profileTable">
-            <tr>
-                <td>Username</td>
-                <td>{{ user.username }}</td>
-            </tr>
-            <tr>
-                <td>Password</td>
-                <td><a class="link-offset-2 link-underline" href="{% url 'change_password' %}">Change Password</a></td>
-            </tr>
-            {% if user.email  %}
-            <tr>
-                <td>Email</td>
-                <td>{{ user.email }}</td>
-            </tr>
-            {% endif %}
-            <tr>
-                <td>Member since</td>
-                <td>{{ user.date_joined|date }}</td>
-            </tr>
-            <tr>
-                <td>Total number of entries</td>
-                <td>{{ entry_count }}</td>
-            </tr>
-            <tr>
-                <td>Longest journaling streak</td>
-                <td>{{ longest_streak }} {% if longest_streak < 2 %}day{% else %}days{% endif %}</td>
-            </tr>
-        </table>
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Left Column - Profile Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Profile Information</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="position-relative d-inline-block">
+                            <img src="{% static 'images/default-avatar.png' %}" 
+                                 class="rounded-circle border border-3 border-primary" 
+                                 width="150" 
+                                 height="150" 
+                                 alt="Profile Picture">
+                            <button class="btn btn-sm btn-outline-secondary position-absolute bottom-0 end-0 rounded-circle">
+                                <i class="bi bi-camera"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ user.get_full_name|default:user.username }}</h3>
+                    <p class="text-muted mb-3">@{{ user.username }}</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'change_password' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-key me-2"></i>Change Password
+                        </a>
+                        {% if not user.email %}
+                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addEmailModal">
+                            <i class="bi bi-envelope-plus me-2"></i>Add Email
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-start small">
+                        <p class="mb-1"><i class="bi bi-envelope me-2"></i> 
+                            {% if user.email %}
+                                {{ user.email }}
+                            {% else %}
+                                No email added
+                            {% endif %}
+                        </p>
+                        <p class="mb-1"><i class="bi bi-calendar3 me-2"></i> 
+                            Member since {{ user.date_joined|date:"F j, Y" }}
+                        </p>
+                        <p class="mb-0"><i class="bi bi-clock-history me-2"></i> 
+                            Last login: {{ user.last_login|timesince }} ago
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column - Stats & Activity -->
+        <div class="col-md-8">
+            <!-- Stats Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-primary bg-opacity-10 border-0 h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-muted small mb-1">Total Entries</h6>
+                                    <h2 class="mb-0">{{ entry_count }}</h2>
+                                </div>
+                                <div class="bg-primary bg-opacity-25 p-3 rounded-circle">
+                                    <i class="bi bi-journal-text fs-4 text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'all_entries' %}" class="btn btn-sm btn-outline-primary">
+                                    View All Entries <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card bg-success bg-opacity-10 border-0 h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-muted small mb-1">Current Streak</h6>
+                                    <h2 class="mb-0">{{ current_streak|default:0 }} <small class="fs-6">days</small></h2>
+                                </div>
+                                <div class="bg-success bg-opacity-25 p-3 rounded-circle">
+                                    <i class="bi bi-fire fs-4 text-success"></i>
+                                </div>
+                            </div>
+                            <div class="progress mt-3">
+                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: {{ streak_percentage }}%"
+                                     aria-valuenow="{{ streak_percentage }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-2 mb-0">
+                                {% if current_streak %}
+                                    Keep it up! Your next entry is tomorrow.
+                                {% else %}
+                                    Start a new streak by writing today!
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card bg-warning bg-opacity-10 border-0 h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-muted small mb-1">Longest Streak</h6>
+                                    <h2 class="mb-0">{{ longest_streak }} <small class="fs-6">days</small></h2>
+                                </div>
+                                <div class="bg-warning bg-opacity-25 p-3 rounded-circle">
+                                    <i class="bi bi-trophy fs-4 text-warning"></i>
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-3 mb-0">
+                                {% if longest_streak_date %}
+                                    Achieved on {{ longest_streak_date|date:"F j, Y" }}
+                                {% else %}
+                                    Start writing to begin your streak!
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card bg-info bg-opacity-10 border-0 h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase text-muted small mb-1">This Month</h6>
+                                    <h2 class="mb-0">{{ entries_this_month }} <small class="fs-6">entries</small></h2>
+                                </div>
+                                <div class="bg-info bg-opacity-25 p-3 rounded-circle">
+                                    <i class="bi bi-calendar-month fs-4 text-info"></i>
+                                </div>
+                            </div>
+                            <p class="small text-muted mt-3 mb-0">
+                                {{ entries_today }} entries today
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_entries %}
+                        <div class="list-group list-group-flush">
+                            {% for entry in recent_entries %}
+                            <a href="{% url 'entry_on' entry.date|date:'Y-m-d' %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ entry.title|default:"Untitled Entry" }}</h6>
+                                    <small class="text-muted">{{ entry.date|date:"M j, Y" }}</small>
+                                </div>
+                                <p class="mb-1 text-truncate">{{ entry.content|striptags|truncatewords:15 }}</p>
+                                {% if entry.tags.all %}
+                                    <div class="mt-1">
+                                        {% for tag in entry.tags.all|slice:":3" %}
+                                            <span class="badge bg-light text-dark border me-1">{{ tag.name }}</span>
+                                        {% endfor %}
+                                        {% if entry.tags.count > 3 %}
+                                            <span class="badge bg-light text-muted">+{{ entry.tags.count|add:"-3" }} more</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        <div class="card-footer text-end">
+                            <a href="{% url 'all_entries' %}" class="btn btn-sm btn-outline-primary">
+                                View All Activity <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5">
+                            <i class="bi bi-journal-text display-4 text-muted mb-3"></i>
+                            <p class="text-muted">No recent activity yet.</p>
+                            <a href="{% url 'create_entry' %}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i> Create Your First Entry
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- Add Email Modal -->
+<div class="modal fade" id="addEmailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Email Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'profile' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p>Adding an email address will help with account recovery and notifications.</p>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: transform 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+    }
+    .progress {
+        background-color: #e9ecef;
+        height: 5px;
+    }
+    .progress-bar {
+        transition: width 0.6s ease;
+    }
+</style>
 {% endblock %}
