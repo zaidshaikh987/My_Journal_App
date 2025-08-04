@@ -125,8 +125,4 @@ To run the **Journal** locally, follow these steps:
 - SQLite
 - TinyMCE Text Editor
 
-
-## Contact
-I'm [Hawshemi](https://hawshemi.com). You can reach me at rhawshemi@gmail.com
-
 [Go Top ➚](#journal)
