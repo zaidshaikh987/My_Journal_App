@@ -115,6 +115,17 @@ To run the **Journal** locally, follow these steps:
 9. Create a new account, and start using **Journal Calendar**.
 
 
+## Screenshots
+
+### Home Page
+![Home Page](Images/image_1.png)
+
+### Calendar View
+![Calendar View](Images/image_2.png)
+
+### Entry Details
+![Entry Details](Images/image_3.png)
+
 ## Languages & Tools
 
 - Python (Django Framework)
